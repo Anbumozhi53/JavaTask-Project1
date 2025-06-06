@@ -1,0 +1,58 @@
+package com.example.employeemanagement.controller;
+
+import com.example.employeemanagement.model.Employee;
+import com.example.employeemanagement.repository.EmployeeRepository;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/employees")
+@CrossOrigin(origins = "*")
+public class EmployeeController {
+
+    @Autowired
+    private EmployeeRepository repository;
+
+    @GetMapping
+    public List<Employee> getAllEmployees() {
+        return repository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
+        return repository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public Employee createEmployee(@Valid @RequestBody Employee employee) {
+        return repository.save(employee);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @Valid @RequestBody Employee updatedEmployee) {
+        return repository.findById(id)
+                .map(employee -> {
+                    employee.setName(updatedEmployee.getName());
+                    employee.setRole(updatedEmployee.getRole());
+                    employee.setEmail(updatedEmployee.getEmail());
+                    return ResponseEntity.ok(repository.save(employee));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
+        return repository.findById(id)
+                .map(employee -> {
+                    repository.delete(employee);
+                    return ResponseEntity.ok().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+}
